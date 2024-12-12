@@ -22,7 +22,7 @@ def insert_data(collection):
 def execute_query_and_save_result(query, filename, need_cast_to_list=True):
     results = list(query()) if need_cast_to_list else query()
     with open(f'{filename}', 'w+', encoding='utf-8') as file:
-        json.dump(results, file, ensure_ascii=False)
+        json.dump(results, file, ensure_ascii=False, default=str)
 
 
 client, collection = create_collection()

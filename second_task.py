@@ -15,7 +15,7 @@ def insert_data(collection):
 
 
 client, collection = create_collection()
-# insert_data(collection)
+#insert_data(collection)
 
 execute_query_and_save_result(
     lambda: collection.aggregate([{
@@ -27,6 +27,15 @@ execute_query_and_save_result(
         }
     }]),
     './results/2/salary_characteristics.json')
+
+execute_query_and_save_result(
+    lambda: collection.aggregate([{
+        '$group': {
+            '_id': '$job',
+            'Count': {'$sum': 1},
+        }
+    }]),
+    './results/2/job_counts.json')
 
 execute_query_and_save_result(
     lambda: collection.aggregate([{
@@ -109,3 +118,76 @@ execute_query_and_save_result(
         }
     ]),
     './results/2/min_salary_by_max_age.json')
+
+execute_query_and_save_result(
+    lambda: collection.aggregate([
+        {
+            '$match': {
+                "salary": {'$gt': 50_000}
+            }
+        },
+        {
+            '$group': {
+                '_id': '$city',
+                'MinAge': {'$min': '$age'},
+                'MaxAge': {'$max': '$age'},
+                'AverageAge': {'$avg': '$age'},
+            }
+        },
+        {
+            '$sort': {
+                'AverageAge': pymongo.DESCENDING
+            }
+        }
+    ]),
+    './results/2/age_characteristics_by_city_with_filter_by_age.json')
+
+execute_query_and_save_result(
+    lambda: collection.aggregate([
+        {
+            '$match': {
+                '$or': [
+                    {'age': {'$gte': 18, '$lte': 25}},
+                    {'age': {'$gte': 50, '$lte': 65}}
+                ]
+            }
+
+        },
+        {
+            '$group': {
+                '_id': {
+                    'city': '$city',
+                    'job': "$job"
+                },
+                'MinSalary': {'$min': '$salary'},
+                'MaxSalary': {'$max': '$salary'},
+                'AverageSalary': {'$avg': '$salary'},
+            }
+        }
+    ]),
+    './results/2/salary_characteristics_with_age_filter_by_city_and_job.json')
+# не особо понял условие задачи, сделал так, но часто в аггрегации только одна запись
+
+
+execute_query_and_save_result(
+    lambda: collection.aggregate([
+        {
+            '$match': {
+                "city": 'Москва'
+            }
+        },
+        {
+            '$group': {
+                '_id': '$age',
+                'MinSalary': {'$min': '$salary'},
+                'MaxSalary': {'$max': '$salary'},
+                'AverageSalary': {'$avg': '$salary'},
+            }
+        },
+        {
+            '$sort': {
+                'AverageSalary': pymongo.DESCENDING
+            }
+        }
+    ]),
+    './results/2/salary_characteristics_by_age_in_Moscow.json')
